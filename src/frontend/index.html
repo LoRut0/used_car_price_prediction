@@ -1,0 +1,940 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Оценка стоимости автомобиля</title>
+  <style>
+    :root {
+      --bg: #f4f7fb;
+      --card: #ffffff;
+      --text: #172033;
+      --muted: #6b7280;
+      --border: #d9e1ec;
+      --primary: #2563eb;
+      --primary-dark: #1e40af;
+      --danger: #dc2626;
+      --success: #16a34a;
+      --shadow: 0 18px 50px rgba(15, 23, 42, 0.1);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: linear-gradient(135deg, #eef4ff 0%, #f8fafc 45%, #eff6ff 100%);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    .page {
+      width: min(1180px, calc(100% - 32px));
+      margin: 0 auto;
+      padding: 40px 0 56px;
+    }
+
+    .hero {
+      display: grid;
+      grid-template-columns: 1.3fr 0.7fr;
+      gap: 24px;
+      align-items: stretch;
+      margin-bottom: 24px;
+    }
+
+    .hero-card,
+    .result-card,
+    .form-card {
+      background: rgba(255, 255, 255, 0.9);
+      border: 1px solid rgba(217, 225, 236, 0.9);
+      border-radius: 28px;
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(10px);
+    }
+
+    .hero-card {
+      padding: 34px;
+    }
+
+    .hero-card h1 {
+      margin: 0 0 12px;
+      font-size: clamp(30px, 4vw, 48px);
+      line-height: 1.05;
+      letter-spacing: -0.04em;
+    }
+
+    .hero-card p {
+      max-width: 720px;
+      margin: 0;
+      color: var(--muted);
+      font-size: 17px;
+      line-height: 1.6;
+    }
+
+    .result-card {
+      padding: 28px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 24px;
+    }
+
+    .result-label {
+      margin: 0 0 6px;
+      color: var(--muted);
+      font-size: 14px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    .price {
+      font-size: clamp(30px, 4vw, 44px);
+      font-weight: 800;
+      letter-spacing: -0.04em;
+    }
+
+    .result-note {
+      color: var(--muted);
+      line-height: 1.5;
+      font-size: 14px;
+    }
+
+    .status {
+      display: inline-flex;
+      align-items: center;
+      width: fit-content;
+      gap: 8px;
+      padding: 8px 12px;
+      border-radius: 999px;
+      background: #eef2ff;
+      color: #3730a3;
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 1fr 360px;
+      gap: 24px;
+      align-items: start;
+    }
+
+    .form-card {
+      padding: 28px;
+    }
+
+    .section {
+      margin-bottom: 30px;
+    }
+
+    .section:last-child {
+      margin-bottom: 0;
+    }
+
+    .section-title {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 16px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .section-title h2 {
+      margin: 0;
+      font-size: 20px;
+      letter-spacing: -0.02em;
+    }
+
+    .section-title span {
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 16px;
+    }
+
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+    }
+
+    .field.full {
+      grid-column: 1 / -1;
+    }
+
+    label {
+      color: #344054;
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+    input,
+    select {
+      width: 100%;
+      min-height: 44px;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      background: #ffffff;
+      padding: 10px 13px;
+      color: var(--text);
+      font: inherit;
+      outline: none;
+      transition: border-color 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease;
+    }
+
+    input:focus,
+    select:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.12);
+    }
+
+    input[type="checkbox"] {
+      width: 18px;
+      min-height: 18px;
+      accent-color: var(--primary);
+    }
+
+    .checkbox-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .check-card {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-height: 48px;
+      padding: 12px;
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      background: #fff;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .check-card span {
+      font-size: 14px;
+      font-weight: 650;
+    }
+
+    .actions {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-top: 24px;
+    }
+
+    button {
+      border: none;
+      border-radius: 16px;
+      padding: 13px 18px;
+      font: inherit;
+      font-weight: 800;
+      cursor: pointer;
+      transition: transform 0.15s ease, background 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    button:hover {
+      transform: translateY(-1px);
+    }
+
+    .primary-btn {
+      background: var(--primary);
+      color: white;
+      box-shadow: 0 14px 26px rgba(37, 99, 235, 0.24);
+    }
+
+    .primary-btn:hover {
+      background: var(--primary-dark);
+    }
+
+    .ghost-btn {
+      background: #eef2ff;
+      color: #1e3a8a;
+    }
+
+    .side-panel {
+      position: sticky;
+      top: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .mini-card {
+      background: #ffffff;
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      padding: 22px;
+      box-shadow: 0 12px 35px rgba(15, 23, 42, 0.06);
+    }
+
+    .mini-card h3 {
+      margin: 0 0 10px;
+      font-size: 18px;
+    }
+
+    .mini-card p {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.5;
+      font-size: 14px;
+    }
+
+    .payload {
+      margin-top: 12px;
+      max-height: 360px;
+      overflow: auto;
+      background: #0f172a;
+      color: #dbeafe;
+      border-radius: 18px;
+      padding: 16px;
+      font-family: "JetBrains Mono", "Fira Code", monospace;
+      font-size: 12px;
+      line-height: 1.55;
+      white-space: pre-wrap;
+    }
+
+    .message {
+      margin-top: 14px;
+      padding: 12px 14px;
+      border-radius: 16px;
+      font-weight: 700;
+      font-size: 14px;
+      display: none;
+    }
+
+    .message.error {
+      display: block;
+      background: #fef2f2;
+      color: var(--danger);
+    }
+
+    .message.success {
+      display: block;
+      background: #f0fdf4;
+      color: var(--success);
+    }
+
+    @media (max-width: 980px) {
+      .hero,
+      .layout {
+        grid-template-columns: 1fr;
+      }
+
+      .side-panel {
+        position: static;
+      }
+    }
+
+    @media (max-width: 720px) {
+      .page {
+        width: min(100% - 20px, 1180px);
+        padding: 20px 0 36px;
+      }
+
+      .hero-card,
+      .result-card,
+      .form-card,
+      .mini-card {
+        border-radius: 22px;
+        padding: 20px;
+      }
+
+      .grid,
+      .checkbox-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <section class="hero">
+      <div class="hero-card">
+        <h1>Оценка стоимости подержанного автомобиля</h1>
+      </div>
+
+      <aside class="result-card">
+        <div>
+          <p class="result-label">Прогноз цены</p>
+          <div class="price" id="priceResult">—</div>
+          <p class="result-note" id="resultNote">После отправки формы здесь появится предсказанная цена.</p>
+        </div>
+        <div class="status" id="apiStatus">API: ожидает запроса</div>
+      </aside>
+    </section>
+
+    <section class="layout">
+      <form class="form-card" id="carForm">
+        <div class="section">
+          <div class="section-title">
+            <h2>Основные данные</h2>
+            <span>Марка, модель, год</span>
+          </div>
+
+          <div class="grid">
+            <div class="field">
+              <label for="manufacturer_name">Марка</label>
+              <select id="manufacturer_name" name="manufacturer_name" required disabled>
+                <option value="">Загрузка каталога...</option>
+              </select>
+            </div>
+
+            <div class="field">
+              <label for="model_name">Модель</label>
+              <select id="model_name" name="model_name" required disabled>
+                <option value="">Сначала выберите марку</option>
+              </select>
+            </div>
+
+            <div class="field">
+              <label for="year_produced">Год выпуска</label>
+              <input id="year_produced" name="year_produced" type="number" min="1950" max="2026" value="2010" required />
+            </div>
+
+            <div class="field">
+              <label for="odometer_value">Пробег, км</label>
+              <input id="odometer_value" name="odometer_value" type="number" min="0" step="1000" value="180000" required />
+            </div>
+
+            <div class="field">
+              <label for="number_of_photos">Количество фото</label>
+              <input id="number_of_photos" name="number_of_photos" type="number" min="0" max="100" value="10" required />
+            </div>
+
+            <div class="field">
+              <label for="location_region">Регион</label>
+              <select id="location_region" name="location_region" required>
+                <option value="Минская обл.">Минская обл.</option>
+                <option value="Гомельская обл.">Гомельская обл.</option>
+                <option value="Могилевская обл.">Могилевская обл.</option>
+                <option value="Витебская обл.">Витебская обл.</option>
+                <option value="Гродненская обл.">Гродненская обл.</option>
+                <option value="Брестская обл.">Брестская обл.</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div class="section">
+          <div class="section-title">
+            <h2>Технические характеристики</h2>
+            <span>Двигатель и кузов</span>
+          </div>
+
+          <div class="grid">
+            <div class="field">
+              <label for="transmission">Коробка передач</label>
+              <select id="transmission" name="transmission" required>
+                <option value="automatic">Автоматическая</option>
+                <option value="mechanical">Механическая</option>
+              </select>
+            </div>
+
+            <div class="field">
+              <label for="engine_fuel">Топливо</label>
+              <select id="engine_fuel" name="engine_fuel" required>
+                <option value="gasoline">Бензин</option>
+                <option value="diesel">Дизель</option>
+                <option value="electric">Электро</option>
+                <option value="hybrid-petrol">Гибрид бензин</option>
+                <option value="hybrid-diesel">Гибрид дизель</option>
+              </select>
+            </div>
+
+            <div class="field">
+              <label for="engine_type">Тип двигателя</label>
+              <select id="engine_type" name="engine_type" required>
+                <option value="gasoline">Бензиновый</option>
+                <option value="diesel">Дизельный</option>
+                <option value="electric">Электрический</option>
+              </select>
+            </div>
+
+            <div class="field">
+              <label for="engine_capacity">Объём двигателя, л</label>
+              <input id="engine_capacity" name="engine_capacity" type="number" min="0" max="8" step="0.1" value="2.0" required />
+            </div>
+
+            <div class="field">
+              <label for="body_type">Кузов</label>
+              <select id="body_type" name="body_type" required>
+                <option value="sedan">Седан</option>
+                <option value="hatchback">Хэтчбек</option>
+                <option value="universal">Универсал</option>
+                <option value="suv">SUV / внедорожник</option>
+                <option value="liftback">Лифтбек</option>
+                <option value="minivan">Минивэн</option>
+                <option value="coupe">Купе</option>
+                <option value="pickup">Пикап</option>
+                <option value="van">Фургон</option>
+              </select>
+            </div>
+
+            <div class="field">
+              <label for="drivetrain">Привод</label>
+              <select id="drivetrain" name="drivetrain" required>
+                <option value="front">Передний</option>
+                <option value="rear">Задний</option>
+                <option value="all">Полный</option>
+              </select>
+            </div>
+
+            <div class="field">
+              <label for="color">Цвет</label>
+              <select id="color" name="color" required>
+                <option value="black">Чёрный</option>
+                <option value="silver">Серебристый</option>
+                <option value="white">Белый</option>
+                <option value="blue">Синий</option>
+                <option value="red">Красный</option>
+                <option value="gray">Серый</option>
+                <option value="green">Зелёный</option>
+                <option value="brown">Коричневый</option>
+                <option value="other">Другой</option>
+              </select>
+            </div>
+
+            <div class="field">
+              <label for="state">Состояние</label>
+              <select id="state" name="state" required>
+                <option value="owned">С пробегом</option>
+                <option value="new">Новый</option>
+                <option value="emergency">Аварийный</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div class="section">
+          <div class="section-title">
+            <h2>Дополнительные признаки</h2>
+            <span>Логические параметры</span>
+          </div>
+
+          <div class="checkbox-grid">
+            <label class="check-card">
+              <input type="checkbox" name="engine_has_gas" />
+              <span>Есть газовое оборудование</span>
+            </label>
+
+            <label class="check-card">
+              <input type="checkbox" name="has_warranty" />
+              <span>Есть гарантия</span>
+            </label>
+
+            <label class="check-card">
+              <input type="checkbox" name="is_exchangeable" />
+              <span>Возможен обмен</span>
+            </label>
+          </div>
+        </div>
+
+        <div class="section">
+          <div class="section-title">
+            <h2>Опции автомобиля</h2>
+            <span>Будут превращены в features_count</span>
+          </div>
+
+          <div class="checkbox-grid" id="featuresBox">
+            <label class="check-card"><input type="checkbox" data-feature /><span>Кондиционер / климат</span></label>
+            <label class="check-card"><input type="checkbox" data-feature /><span>Литые диски</span></label>
+            <label class="check-card"><input type="checkbox" data-feature /><span>Парктроники / камера</span></label>
+            <label class="check-card"><input type="checkbox" data-feature /><span>Круиз-контроль</span></label>
+            <label class="check-card"><input type="checkbox" data-feature /><span>Подогрев сидений</span></label>
+            <label class="check-card"><input type="checkbox" data-feature /><span>Кожаный салон</span></label>
+            <label class="check-card"><input type="checkbox" data-feature /><span>Мультимедиа</span></label>
+            <label class="check-card"><input type="checkbox" data-feature /><span>Ксенон / LED</span></label>
+            <label class="check-card"><input type="checkbox" data-feature /><span>Датчики дождя / света</span></label>
+            <label class="check-card"><input type="checkbox" data-feature /><span>Системы безопасности</span></label>
+          </div>
+        </div>
+
+        <div class="actions">
+          <button class="primary-btn" type="submit">Рассчитать цену</button>
+          <button class="ghost-btn" type="button" id="fillExampleBtn">Заполнить пример</button>
+          <button class="ghost-btn" type="reset">Очистить</button>
+        </div>
+
+        <div class="message" id="messageBox"></div>
+      </form>
+
+      <aside class="side-panel">
+        <div class="mini-card">
+          <h3>Данные для модели</h3>
+          <p>
+            Здесь можно проверить JSON, который уйдёт в backend.
+          </p>
+          <pre class="payload" id="payloadPreview">{}</pre>
+        </div>
+      </aside>
+    </section>
+  </main>
+
+  <script>
+    const API_BASE_URL = "http://127.0.0.1:8000";
+    const PREDICT_URL = `${API_BASE_URL}/api/predict`;
+    const CATALOG_URL = `${API_BASE_URL}/api/catalog`;
+
+    const form = document.getElementById("carForm");
+    const payloadPreview = document.getElementById("payloadPreview");
+    const priceResult = document.getElementById("priceResult");
+    const resultNote = document.getElementById("resultNote");
+    const messageBox = document.getElementById("messageBox");
+    const apiStatus = document.getElementById("apiStatus");
+    const fillExampleBtn = document.getElementById("fillExampleBtn");
+
+    const manufacturerSelect = document.getElementById("manufacturer_name");
+    const modelSelect = document.getElementById("model_name");
+
+    let carCatalog = {};
+
+    function toNumber(value) {
+      const number = Number(value);
+      return Number.isFinite(number) ? number : 0;
+    }
+
+    function getFeaturesSum() {
+      return Array.from(document.querySelectorAll("[data-feature]"))
+        .filter((checkbox) => checkbox.checked)
+        .length;
+    }
+
+    function getBooleanField(name) {
+      const checkbox = form.elements[name];
+      return Boolean(checkbox && checkbox.checked);
+    }
+
+    function buildPayload() {
+      const data = new FormData(form);
+
+      return {
+        manufacturer_name: String(data.get("manufacturer_name") || "").trim(),
+        model_name: String(data.get("model_name") || "").trim(),
+        transmission: data.get("transmission"),
+        color: data.get("color"),
+        odometer_value: toNumber(data.get("odometer_value")),
+        year_produced: toNumber(data.get("year_produced")),
+        engine_fuel: data.get("engine_fuel"),
+        engine_has_gas: getBooleanField("engine_has_gas"),
+        engine_type: data.get("engine_type"),
+        engine_capacity: toNumber(data.get("engine_capacity")),
+        body_type: data.get("body_type"),
+        has_warranty: getBooleanField("has_warranty"),
+        state: data.get("state"),
+        drivetrain: data.get("drivetrain"),
+        is_exchangeable: getBooleanField("is_exchangeable"),
+        location_region: data.get("location_region"),
+        number_of_photos: toNumber(data.get("number_of_photos")),
+        features_count: getFeaturesSum()
+      };
+    }
+
+    function updatePreview() {
+      const payload = buildPayload();
+      payloadPreview.textContent = JSON.stringify(payload, null, 2);
+    }
+
+    function showMessage(text, type = "success") {
+      messageBox.textContent = text;
+      messageBox.className = `message ${type}`;
+    }
+
+    function clearMessage() {
+      messageBox.textContent = "";
+      messageBox.className = "message";
+    }
+
+    function formatPrice(price) {
+      return new Intl.NumberFormat("ru-RU", {
+        style: "currency",
+        currency: "USD",
+        maximumFractionDigits: 0
+      }).format(price);
+    }
+
+    function getBackendErrorMessage(data) {
+      if (!data) {
+        return "Backend вернул ошибку без тела ответа";
+      }
+
+      if (typeof data.detail === "string") {
+        return data.detail;
+      }
+
+      if (data.detail && typeof data.detail.message === "string") {
+        return data.detail.message;
+      }
+
+      if (Array.isArray(data.detail)) {
+        return data.detail
+          .map((error) => {
+            const field = Array.isArray(error.loc) ? error.loc.join(".") : "field";
+            return `${field}: ${error.msg}`;
+          })
+          .join("; ");
+      }
+
+      return JSON.stringify(data, null, 2);
+    }
+
+    async function loadCatalog() {
+      apiStatus.textContent = "API: загрузка каталога...";
+
+      try {
+        const response = await fetch(CATALOG_URL);
+        const catalog = await response.json();
+
+        if (!response.ok) {
+          throw new Error(getBackendErrorMessage(catalog));
+        }
+
+        carCatalog = catalog;
+        fillManufacturerSelect();
+
+        apiStatus.textContent = "API: каталог загружен";
+        clearMessage();
+        updatePreview();
+      } catch (error) {
+        manufacturerSelect.innerHTML = `<option value="">Каталог недоступен</option>`;
+        manufacturerSelect.disabled = true;
+
+        modelSelect.innerHTML = `<option value="">Каталог недоступен</option>`;
+        modelSelect.disabled = true;
+
+        apiStatus.textContent = "API: каталог недоступен";
+        showMessage(`Не удалось загрузить каталог авто: ${error.message}`, "error");
+      }
+    }
+
+    function fillManufacturerSelect() {
+      const manufacturers = Object.keys(carCatalog).sort();
+
+      manufacturerSelect.innerHTML = `<option value="">Выберите марку</option>`;
+
+      for (const manufacturer of manufacturers) {
+        const option = document.createElement("option");
+        option.value = manufacturer;
+        option.textContent = manufacturer;
+        manufacturerSelect.appendChild(option);
+      }
+
+      manufacturerSelect.disabled = manufacturers.length === 0;
+
+      modelSelect.innerHTML = `<option value="">Сначала выберите марку</option>`;
+      modelSelect.disabled = true;
+    }
+
+    function fillModelSelect(manufacturerName) {
+      const models = carCatalog[manufacturerName] || [];
+
+      modelSelect.innerHTML = `<option value="">Выберите модель</option>`;
+
+      for (const model of models) {
+        const option = document.createElement("option");
+        option.value = model;
+        option.textContent = model;
+        modelSelect.appendChild(option);
+      }
+
+      modelSelect.disabled = models.length === 0;
+    }
+
+    function setManufacturerAndModel(manufacturerName, modelName) {
+      if (!carCatalog[manufacturerName]) {
+        showMessage(`Марка "${manufacturerName}" отсутствует в каталоге.`, "error");
+        return false;
+      }
+
+      manufacturerSelect.value = manufacturerName;
+      fillModelSelect(manufacturerName);
+
+      if (!carCatalog[manufacturerName].includes(modelName)) {
+        showMessage(
+          `Модель "${modelName}" не найдена для марки "${manufacturerName}".`,
+          "error"
+        );
+        return false;
+      }
+
+      modelSelect.value = modelName;
+      return true;
+    }
+
+    async function requestPrediction(payload) {
+      console.log("Payload:", payload);
+
+      const response = await fetch(PREDICT_URL, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(payload)
+      });
+
+      const data = await response.json().catch(() => null);
+
+      if (!response.ok) {
+        console.error("Backend error:", data);
+        throw new Error(getBackendErrorMessage(data));
+      }
+
+      return data;
+    }
+
+    manufacturerSelect.addEventListener("change", () => {
+      clearMessage();
+
+      const manufacturerName = manufacturerSelect.value;
+
+      if (!manufacturerName) {
+        modelSelect.innerHTML = `<option value="">Сначала выберите марку</option>`;
+        modelSelect.disabled = true;
+      } else {
+        fillModelSelect(manufacturerName);
+      }
+
+      updatePreview();
+    });
+
+    modelSelect.addEventListener("change", () => {
+      clearMessage();
+      updatePreview();
+    });
+
+    form.addEventListener("input", () => {
+      clearMessage();
+      updatePreview();
+    });
+
+    form.addEventListener("reset", () => {
+      setTimeout(() => {
+        clearMessage();
+
+        priceResult.textContent = "—";
+        resultNote.textContent = "После отправки формы здесь появится предсказанная цена.";
+        apiStatus.textContent = "API: ожидает запроса";
+
+        fillManufacturerSelect();
+        updatePreview();
+      }, 0);
+    });
+
+    form.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      clearMessage();
+
+      if (!form.checkValidity()) {
+        form.reportValidity();
+        return;
+      }
+
+      const payload = buildPayload();
+
+      if (!carCatalog[payload.manufacturer_name]) {
+        showMessage("Выбранная марка отсутствует в каталоге.", "error");
+        return;
+      }
+
+      if (!carCatalog[payload.manufacturer_name].includes(payload.model_name)) {
+        showMessage("Выбранная модель отсутствует в каталоге выбранной марки.", "error");
+        return;
+      }
+
+      updatePreview();
+      apiStatus.textContent = "API: отправка запроса...";
+
+      try {
+        const result = await requestPrediction(payload);
+        const price = Number(result.price_usd ?? result.price ?? result.prediction);
+
+        if (!Number.isFinite(price)) {
+          throw new Error("В ответе backend нет числового поля price_usd, price или prediction.");
+        }
+
+        priceResult.textContent = formatPrice(price);
+        resultNote.textContent = "Оценка получена от модели машинного обучения.";
+        apiStatus.textContent = "API: прогноз получен";
+        showMessage("Цена успешно рассчитана.", "success");
+      } catch (error) {
+        const demoPrice = estimateDemoPrice(payload);
+
+        priceResult.textContent = formatPrice(demoPrice);
+        resultNote.textContent = "Backend вернул ошибку, поэтому показана демонстрационная оценка интерфейса.";
+        apiStatus.textContent = "API: ошибка прогноза";
+
+        showMessage(`${error.message}. Показан demo-расчёт без модели.`, "error");
+      }
+    });
+
+    fillExampleBtn.addEventListener("click", () => {
+      const ok = setManufacturerAndModel("Subaru", "Outback");
+
+      form.elements.year_produced.value = 2010;
+      form.elements.odometer_value.value = 190000;
+      form.elements.number_of_photos.value = 9;
+      form.elements.location_region.value = "Минская обл.";
+      form.elements.transmission.value = "automatic";
+      form.elements.engine_fuel.value = "gasoline";
+      form.elements.engine_type.value = "gasoline";
+      form.elements.engine_capacity.value = 2.5;
+      form.elements.body_type.value = "universal";
+      form.elements.drivetrain.value = "all";
+      form.elements.color.value = "silver";
+      form.elements.state.value = "owned";
+      form.elements.engine_has_gas.checked = false;
+      form.elements.has_warranty.checked = false;
+      form.elements.is_exchangeable.checked = false;
+
+      document.querySelectorAll("[data-feature]").forEach((checkbox, index) => {
+        checkbox.checked = [1, 2, 3, 5, 7, 8, 9].includes(index);
+      });
+
+      if (ok) {
+        clearMessage();
+      }
+
+      updatePreview();
+    });
+
+    function estimateDemoPrice(payload) {
+      const age = Math.max(0, new Date().getFullYear() - payload.year_produced);
+      const mileagePenalty = payload.odometer_value * 0.018;
+      const agePenalty = age * 520;
+      const engineBonus = payload.engine_capacity * 850;
+      const drivetrainBonus = payload.drivetrain === "all" ? 1200 : payload.drivetrain === "rear" ? 600 : 0;
+      const transmissionBonus = payload.transmission === "automatic" ? 700 : 0;
+      const featureBonus = payload.features_count * 280;
+      const warrantyBonus = payload.has_warranty ? 1000 : 0;
+      const emergencyPenalty = payload.state === "emergency" ? 3500 : 0;
+
+      const price =
+        16500 -
+        mileagePenalty -
+        agePenalty +
+        engineBonus +
+        drivetrainBonus +
+        transmissionBonus +
+        featureBonus +
+        warrantyBonus -
+        emergencyPenalty;
+
+      return Math.max(500, Math.round(price));
+    }
+
+    loadCatalog();
+    updatePreview();
+  </script>
+</body>
+</html>
