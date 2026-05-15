@@ -178,8 +178,6 @@ models/used_car_price_model.joblib
 
 и вывести предсказанную стоимость автомобиля.
 
-````
-
 ---
 
 ## Полный порядок запуска проекта
@@ -188,7 +186,7 @@ models/used_car_price_model.joblib
 
 ```bash
 cd used_car_price_model
-````
+```
 
 ### 2. Создать виртуальное окружение
 
@@ -220,13 +218,11 @@ python src/train.py
 uvicorn backend.main:app --reload
 ```
 
-````
-
 ### 7. Открыть в браузере
 
 ```text
 http://127.0.0.1:8000
-````
+```
 
 ---
 
